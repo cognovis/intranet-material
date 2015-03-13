@@ -613,4 +613,18 @@ ad_proc -private im_material_create_from_parameters {
     return $material_id
 }
 
+ad_proc -public im_material_name {
+    -material_id:required
+} {
+    Returns the material_name for a material
+} {
+    return [util_memoize [list im_material_name_helper -material_id $material_id] 60]
+}
 
+ad_proc im_material_name_helper {
+    -material_id:required
+} {
+    Returns material_name
+} {
+    return [db_string material_name "select material_name from im_materials where material_id = :material_id" -default ""]
+}
