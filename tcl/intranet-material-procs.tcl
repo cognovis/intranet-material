@@ -150,9 +150,11 @@ ad_proc -private im_material_options {
     } else {
 	set order_by_sql ""
     }
+    ds_comment "SHOW:: $show_material_codes_p"
 
-    switch {$show_material_codes_p} {
+    switch $show_material_codes_p {
 	0 {
+
 	    set sql "
 		select	substring(material_name for :max_option_len) as material_name,
 			material_id
