@@ -25,6 +25,7 @@ ad_proc -public im_material_type_software_dev { } { return 9008 }
 ad_proc -public im_material_type_web_site_dev { } { return 9010 }
 ad_proc -public im_material_type_generic_pm { } { return 9012 }
 ad_proc -public im_material_type_translation { } { return 9014 }
+ad_proc -public im_material_type_auto_gen { } { return 9016 }
 
 # reserved until 9099
 
@@ -51,7 +52,7 @@ ad_proc -private im_material_default_material_id {} {
 		Unable to find any 'material' with name 'default'.<br>
 		We need this 'default material' in order to assign a type of service
 		to objects that otherwise don't have service information, such as projects etc.<br>
-		Please inform your System Administrator and tell him to create a 'default' 
+		Please inform your System Administrator and tell him to create a 'default'
 		material in the <a href='/intranet-material/'>Material Administration Page</a>.
 				  "]
 	"
@@ -92,8 +93,8 @@ ad_proc -private im_material_default_translation_material_id {} {
 # Options
 # ---------------------------------------------------------------------
 
-ad_proc -private im_material_type_options { 
-    {-include_empty 1} 
+ad_proc -private im_material_type_options {
+    {-include_empty 1}
 } {
     set options [db_list_of_lists material_type_options "
 	select	category, category_id
@@ -120,10 +121,10 @@ ad_proc -private im_material_status_options { {-include_empty 1} } {
 
 
 # Get a list of available materials
-ad_proc -private im_material_options { 
-    {-restrict_to_status_id 0} 
-    {-restrict_to_type_id 0} 
-    {-restrict_to_uom_id 0} 
+ad_proc -private im_material_options {
+    {-restrict_to_status_id 0}
+    {-restrict_to_type_id 0}
+    {-restrict_to_uom_id 0}
     {-include_empty 1}
     {-show_material_codes_p 0}
     {-max_option_len 25 }
@@ -196,8 +197,8 @@ ad_proc -private im_material_options {
 }
 
 
-ad_proc -public im_material_select { 
-    {-include_empty_p 0} 
+ad_proc -public im_material_select {
+    {-include_empty_p 0}
     {-restrict_to_status_id 0}
     {-restrict_to_type_id 0}
     {-show_material_codes_p 0}
@@ -218,18 +219,18 @@ ad_proc -public im_material_select {
 # ---------------------------------------------------------------------
 
 ad_proc -public im_material_list_component {
-    {-view_name ""} 
-    {-order_by "priority"} 
-    {-restrict_to_type_id 0} 
-    {-restrict_to_status_id 0} 
-    {-max_entries_per_page ""} 
-    {-start_idx 0} 
-    -user_id 
-    -current_page_url 
-    -return_url 
+    {-view_name ""}
+    {-order_by "priority"}
+    {-restrict_to_type_id 0}
+    {-restrict_to_status_id 0}
+    {-max_entries_per_page ""}
+    {-start_idx 0}
+    -user_id
+    -current_page_url
+    -return_url
     -export_var_list
 } {
-    Creates a HTML table showing a table of Materials 
+    Creates a HTML table showing a table of Materials
 } {
     set bgcolor(0) " class=roweven"
     set bgcolor(1) " class=rowodd"
@@ -353,20 +354,20 @@ ad_proc -public im_material_list_component {
     set order_by_clause "order by m.material_nr"
     set order_by_clause_ext "order by material_nr"
     switch [string tolower $order_by] {
-	"nr" { 
-	    set order_by_clause "order by m.material_nr" 
+	"nr" {
+	    set order_by_clause "order by m.material_nr"
 	    set order_by_clause_ext "order by material_nr"
 	}
-	"name" { 
-	    set order_by_clause "order by m.material_name" 
+	"name" {
+	    set order_by_clause "order by m.material_name"
 	    set order_by_clause_ext "order by material_name"
 	}
-	"type" { 
-	    set order_by_clause "order by m.material_type_id, m.material_nr" 
+	"type" {
+	    set order_by_clause "order by m.material_type_id, m.material_nr"
 	    set order_by_clause_ext "order by material_type_id, material_nr"
 	}
-	"uom" { 
-	    set order_by_clause "order by m.material_uom_id" 
+	"uom" {
+	    set order_by_clause "order by m.material_uom_id"
 	    set order_by_clause_ext "order by material_uom_id"
 	}
     }
@@ -381,8 +382,8 @@ ad_proc -public im_material_list_component {
     }
 
     set restriction_clause [join $restrictions "\n\tand "]
-    if {"" != $restriction_clause} { 
-	set restriction_clause "and $restriction_clause" 
+    if {"" != $restriction_clause} {
+	set restriction_clause "and $restriction_clause"
     }
     set restriction_clause "1=1 $restriction_clause"
     ns_log Notice "im_material_component: restriction_clause=$restriction_clause"
@@ -394,7 +395,7 @@ ad_proc -public im_material_list_component {
     # ---------------------- Limit query to MAX rows -------------------------
     
     # We can't get around counting in advance if we want to be able to
-    # sort inside the table on the page for only those rows in the query 
+    # sort inside the table on the page for only those rows in the query
     # results
     
     set limited_query [im_select_row_range $material_sql $start_idx [expr $start_idx + $max_entries_per_page]]
@@ -507,11 +508,16 @@ ad_proc -private im_material_create_from_parameters {
     In order to create the material, the procedure expects the parameters
     to be avaiable as variables in the calling stackframe.
 } {
-    if {"" == $material_type_id} { set material_type_id [im_material_type_translation] }
+    if {"" == $material_type_id} {
+	    set material_type_id [im_material_type_auto_gen]
+	    set material_name ""
+	} else {
+		set material_name [im_category_from_id -translate_p 0 $material_type_id]
+	}
 
     # ----------------------------------------------------
     # Get the list of parameters as the DynFields of object type "im_material".
-    # 
+    #
     set dynfield_sql "
 	select	*
 	from	acs_attributes aa,
@@ -531,7 +537,7 @@ ad_proc -private im_material_create_from_parameters {
     # ----------------------------------------------------
     # Map the parameters from the calling stack frame to this stack frame
     foreach param $params {
-	upvar 1 $param $param
+		upvar 1 $param $param
     }
 
     # ----------------------------------------------------
@@ -562,7 +568,7 @@ ad_proc -private im_material_create_from_parameters {
     if {"" == $material_id || 0 == $material_id} {
 
 	# Calculate the Material Name from parameters
-	set material_name "Translation"
+
 	set param_derefs [db_list_of_lists param_derefs "select attribute_name, deref_plpgsql_function, sql_datatype from ($dynfield_sql) t"]
 
 	foreach row $param_derefs {
@@ -575,7 +581,7 @@ ad_proc -private im_material_create_from_parameters {
 	    if {"" != $val} {
 		set param_deref [db_string deref "select ${deref_plpgsql_function}(:${attribute_name}::$sql_datatype)" -default ""]
 		if {"" != $material_name} { append material_name ", " }
-		append material_name $param_deref
+			append material_name $param_deref
 	    }
 	}
 
@@ -600,7 +606,7 @@ ad_proc -private im_material_create_from_parameters {
 		set ctr 0
 		foreach param $params {
 		    set komma ""
-		    if {$ctr > 0} { set komma "," } 
+		    if {$ctr > 0} { set komma "," }
 		    append material_update_sql "\t\t${komma}${param} = :$param\n"
 		    incr ctr
 		}
@@ -629,4 +635,13 @@ ad_proc im_material_name_helper {
     Returns material_name
 } {
     return [db_string material_name "select material_name from im_materials where material_id = :material_id" -default ""]
+}
+
+ad_proc im_material_name_pretty {
+	-material_id:required
+} {
+	Returns a nicely formated material_name for printing
+} {
+	set folder_proc [parameter::get -package_id [im_package_material_id] -parameter "MaterialNamePrettyProc" -default "im_material_name_helper"]
+	return [util_memoize [list $folder_proc -material_id $material_id]]
 }

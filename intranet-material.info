@@ -9,18 +9,19 @@
     <singleton-p>t</singleton-p>
     <auto-mount>intranet-material</auto-mount>
 
-    <version name="4.1.0.0.0" url="http://www.project-open.org/download/apm/intranet-material-4.1.0.0.0.apm">
+    <version name="4.1.0.1.0" url="http://www.project-open.org/download/apm/intranet-material-4.1.0.1.0.apm">
 
         <owner url="mailto:frank.bergmann@project-open.com">Frank Bergmann</owner>
         <vendor url="http://www.project-open.com/">]project-open[</vendor>
 
-        <provides url="intranet-material" version="3.4.0.6.0"/>
-        <requires url="intranet-core" version="3.4.0.0.0"/>
+        <provides url="intranet-material" version="4.1.0.1.0"/>
+        <requires url="intranet-core" version="4.1.0.1.0"/>
 
         <callbacks>
         </callbacks>
         <parameters>
             <parameter datatype="number"  min_n_values="1"  max_n_values="1"  name="OrderByTypeP"  default="0" description="Order the materials by type first, then material name or number"/>
+            <parameter datatype="string"  min_n_values="1"  max_n_values="1"  name="MaterialNamePrettyProc"  default="im_material_name_helper" description="Procedure to return the printable MAterial name. Defaults to returning the name."/>
         </parameters>
 
     </version>
